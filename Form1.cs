@@ -9,6 +9,9 @@ using System.Windows.Forms;
 using System.IO;
 using System.Xml.Serialization;
 using System.Security.Cryptography;
+using System.Net.Http;
+using HtmlAgilityPack;
+using System.Xml.Linq;
 
 namespace WindowsFormsApplication1
 {
@@ -29,8 +32,9 @@ namespace WindowsFormsApplication1
             InitializeComponent();
             Rectangle workingArea = Screen.GetWorkingArea(this);
             this.Location = new Point(workingArea.Right+60 - Size.Width,workingArea.Bottom-140 - Size.Height);
-            this.Size=  new System.Drawing.Size(80, 400);
+            this.Size=  new System.Drawing.Size(80, 500);
             GetNewEmails();
+            WeatherforMyLocation();
         }
 
         //Void to get our unsee email count by the login in to gmail acount using Limilabs
@@ -65,7 +69,7 @@ namespace WindowsFormsApplication1
             }
             else
             {
-                MessageBox.Show("Musisz skonfigurować dostęp do skrzynki w ustawieniach aplikacji");
+                MessageBox.Show("Musisz skonfigurować swoje dane dotyczące adresu e-mail oraz lokalizację");
             }
 
         }
@@ -76,12 +80,38 @@ namespace WindowsFormsApplication1
             ICryptoTransform toArray = tr.CreateEncryptor();
             MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
             UTF8Encoding utf = new UTF8Encoding();
-            tr.Key = md5.ComputeHash(utf.GetBytes("************"));//the key is my sweet secret :P
+            tr.Key = md5.ComputeHash(utf.GetBytes("**********"));//the key is my sweet secret :P
             tr.Mode = CipherMode.ECB;
             tr.Padding = PaddingMode.PKCS7;
             ICryptoTransform trans = tr.CreateDecryptor();
             byte[] data = password.Split('-').Select(b => Convert.ToByte(b, 16)).ToArray();
             userPassword = utf.GetString(trans.TransformFinalBlock(data, 0, data.Length));
+        }
+        //Getting info from website about weather in our location
+        private async void WeatherforMyLocation()
+        {
+            try
+            {
+                XDocument xml = System.Xml.Linq.XDocument.Load("UserSettingInfo.xml");
+                string cityname = xml.Descendants("Miejscowosc").FirstOrDefault().FirstNode.ToString();
+                if(cityname.Contains(" ") == true)// checing if our location is one part string name city or two part string name
+                    cityname=cityname.Replace(" ","-") ;                
+                string urllink = "http://www.pogodynka.pl/polska/"+cityname+"_"+cityname; //crating special url link to get to the website for our location
+                var httpClient = new HttpClient();
+                var frompage = await httpClient.GetStringAsync(urllink);
+
+                var htmlDoc = new HtmlAgilityPack.HtmlDocument();
+                htmlDoc.LoadHtml(frompage);
+                var data = htmlDoc.DocumentNode.Descendants("div").
+                            Where(n => n.GetAttributeValue("class", "").Equals("autodin")).ToList();
+                string temperature = data[0].Descendants("b").Where(m => m.InnerText.Contains("&#176;C")).FirstOrDefault().InnerText;
+                LabelTemp.Text = temperature.Replace("&#176;C", "°C");
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Niestety nie udało się pobrać danych pogodowych");
+            }
+           
         }
 
         private void exitpanel_Click(object sender, EventArgs e)
@@ -141,6 +171,7 @@ namespace WindowsFormsApplication1
         private void button2_Click_1(object sender, EventArgs e)
         {
             GetNewEmails();
+            WeatherforMyLocation();
         }
     }
 }

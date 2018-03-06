@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace WindowsFormsApplication1
 {
@@ -45,6 +46,8 @@ namespace WindowsFormsApplication1
                             MessageBox.Show("Pomyślnie udało się zalogować do poczty g-mail.");
                             Adressemail.Text = "";
                             PasswordEmail.Text = "";
+                            panel1.Visible = false;
+                            panel2.Visible = true;
            
                     }
                     
@@ -68,7 +71,7 @@ namespace WindowsFormsApplication1
             TripleDESCryptoServiceProvider tr = new TripleDESCryptoServiceProvider();
             UTF8Encoding utf = new UTF8Encoding();
             MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
-            tr.Key = md5.ComputeHash(utf.GetBytes("************"));//the key to encrypting its my sweet secret :P
+            tr.Key = md5.ComputeHash(utf.GetBytes("********"));//the key to encrypting its my sweet secret :P
             tr.Mode = CipherMode.ECB;
             tr.Padding = PaddingMode.PKCS7;
             ICryptoTransform trans = tr.CreateEncryptor();
@@ -91,6 +94,23 @@ namespace WindowsFormsApplication1
                 button3.Image = System.Drawing.Image.FromFile(@"C:\Users\Kamil\Desktop\view.png");
                 PasswordShow = false;
             }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                XDocument xml = System.Xml.Linq.XDocument.Load("UserSettingInfo.xml");
+                xml.Element("UserSettingInfoModel").Add(new XElement("Miejscowosc", cityname.Text));        
+                xml.Save("UserSettingInfo.xml");
+                MessageBox.Show("Udało się dodać twoją lokalizację do aplikacji");
+                this.Visible = false;
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Nie udało się dodać twojej lokalizacji do aplikacji");
+            }
+            
         }
     }
     }
