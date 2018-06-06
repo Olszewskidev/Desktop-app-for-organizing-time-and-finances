@@ -1,17 +1,15 @@
-﻿using Limilabs.Client.IMAP;
-using System;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
-using System.Xml.Linq;
+
 
 namespace WindowsFormsApplication1
 {
     public partial class Form3 : Form
     {
-       private UserSettingInfoModel model = new UserSettingInfoModel();
-        private bool PasswordShow = false;
+        SavingUserSettinginXML XMLController = new SavingUserSettinginXML();
+        private bool PasswordShow;
+
         public Form3()
         {
             InitializeComponent();
@@ -26,35 +24,17 @@ namespace WindowsFormsApplication1
         //Void checking and adding user data to xml file if data are correct.
         private void button1_Click(object sender, EventArgs e)
         {
-            string UserPassword;
-            string emailvalidator = "^([0-9a-zA-Z]([-\\.\\w]*[0-9a-zA-z])*@([0-9a-zA-Z][-\\w]*[0-9a-zA-Z]\\.)+[a-zA-Z]{2,9})$";
-            if (Regex.IsMatch(Adressemail.Text,emailvalidator))
+            UserSettingInfoModel UserInput = new UserSettingInfoModel();
+            UserInput.Adress = Adressemail.Text;
+            UserInput.Password = PasswordEmail.Text;
+            if (XMLController.isValid(UserInput))
             {
-                try
+                if (XMLController.AddDataAndSave(UserInput))
                 {
-                   
-                    model.Adress = Adressemail.Text;
-                    UserPassword = PasswordEmail.Text;
-
-                    using (Imap imap = new Imap())
-                    {
-                       
-                            imap.ConnectSSL("imap.gmail.com");
-                            imap.UseBestLogin(model.Adress, UserPassword);
-                            EncryptingPassword(UserPassword);
-                            SavingUserSettinginXML.SaveData(model, "UserSettingInfo.xml");
-                            MessageBox.Show("Pomyślnie udało się zalogować do poczty g-mail.");
-                            Adressemail.Text = "";
-                            PasswordEmail.Text = "";
-                            panel1.Visible = false;
-                            panel2.Visible = true;
-           
-                    }
-                    
-                }
-                catch (Exception)
-                {
-                    MessageBox.Show("Dane nie zostały podane poprawnie i nie udało się zalogować do poczty. Upewnij się czy twoja skrzynka korzystanie z protokołu IMAP");
+                    Adressemail.Text = "";
+                    PasswordEmail.Text = "";
+                    panel1.Visible = false;
+                    panel2.Visible = true;
                 }
             }
             else
@@ -64,53 +44,28 @@ namespace WindowsFormsApplication1
             }
           
         }
-        //Void encrypting user password before saving in xml file
-        private void EncryptingPassword(string password)
-        {
-            byte[] encrypted;
-            TripleDESCryptoServiceProvider tr = new TripleDESCryptoServiceProvider();
-            UTF8Encoding utf = new UTF8Encoding();
-            MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
-            tr.Key = md5.ComputeHash(utf.GetBytes("********"));//the key to encrypting its my sweet secret :P
-            tr.Mode = CipherMode.ECB;
-            tr.Padding = PaddingMode.PKCS7;
-            ICryptoTransform trans = tr.CreateEncryptor();
-            encrypted = trans.TransformFinalBlock(utf.GetBytes(password), 0, utf.GetBytes(password).Length);
-            model.Password = BitConverter.ToString(encrypted);
-            
-        }
+    
         //Void to show and hide the password, when user is adding password in textbox
         private void button3_Click(object sender, EventArgs e)
         {
             if (PasswordShow == false)
             {
                 PasswordEmail.UseSystemPasswordChar = false;
-                button3.Image = System.Drawing.Image.FromFile(@"C:\Users\Kamil\Desktop\hide.png");
+                button3.Image = Image.FromFile(@"C:\Users\Kamil\Desktop\hide.png");
                 PasswordShow = true;
             }
             else
             {
                 PasswordEmail.UseSystemPasswordChar = true;
-                button3.Image = System.Drawing.Image.FromFile(@"C:\Users\Kamil\Desktop\view.png");
+                button3.Image = Image.FromFile(@"C:\Users\Kamil\Desktop\view.png");
                 PasswordShow = false;
             }
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
-            try
-            {
-                XDocument xml = System.Xml.Linq.XDocument.Load("UserSettingInfo.xml");
-                xml.Element("UserSettingInfoModel").Add(new XElement("Miejscowosc", cityname.Text));        
-                xml.Save("UserSettingInfo.xml");
-                MessageBox.Show("Udało się dodać twoją lokalizację do aplikacji");
-                this.Visible = false;
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Nie udało się dodać twojej lokalizacji do aplikacji");
-            }
-            
+            if(XMLController.SaveLocation(cityname.Text))
+                this.Visible = false;   
         }
     }
     }

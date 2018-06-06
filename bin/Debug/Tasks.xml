@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<zadania>
+  <zadanie kiedy="27 lutego 2018">
+    <tresc>go to gym,</tresc>
+    <tresc>go to the party,</tresc>
+  </zadanie>
+  <zadanie kiedy="28 lutego 2018">
+    <tresc>do something,</tresc>
+  </zadanie>
+  <zadanie kiedy="6 czerwca 2018">
+    <tresc>go to shop,</tresc>
+    <tresc>go to party,</tresc>
+  </zadanie>
+</zadania>

@@ -1,119 +1,35 @@
 ﻿using System;
-using Limilabs.Client.IMAP;
-using System.Collections.Generic;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using System.IO;
-using System.Xml.Serialization;
-using System.Security.Cryptography;
-using System.Net.Http;
-using HtmlAgilityPack;
-using System.Xml.Linq;
 
 namespace WindowsFormsApplication1
 {
     public partial class Form1 : Form
     {
         private Form2 f2 = new Form2();
-        private bool form4 = false;
+        private bool form4;
         private Form3 f3 = new Form3();
         private Form4 f4 = new Form4();
-        private bool formfin = false;
-        private bool showform3 = false;
-        private string userAdress;
-        private string userPassword;
-        UserSettingInfoModel us;
-
+        private bool formfin;
+        private bool showform3;
         public Form1()
         {
             InitializeComponent();
+            SetFormProp();
+            UpDataPanel();
+        }
+        private void SetFormProp()
+        {
             Rectangle workingArea = Screen.GetWorkingArea(this);
-            this.Location = new Point(workingArea.Right+60 - Size.Width,workingArea.Bottom-140 - Size.Height);
-            this.Size=  new System.Drawing.Size(80, 500);
-            GetNewEmails();
-            WeatherforMyLocation();
+            this.Location = new Point(workingArea.Right + 60 - Size.Width, workingArea.Bottom - 140 - Size.Height);
+            this.Size = new System.Drawing.Size(80, 500);
         }
-
-        //Void to get our unsee email count by the login in to gmail acount using Limilabs
-        private void GetNewEmails()
+        private void UpDataPanel()
         {
-            if (File.Exists("UserSettingInfo.xml"))
-            {
-                us = new UserSettingInfoModel();
-                XmlSerializer XmlSerial = new XmlSerializer(typeof(UserSettingInfoModel));
-                FileStream read = new FileStream("UserSettingInfo.xml", FileMode.Open, FileAccess.Read, FileShare.Read);
-                us = (UserSettingInfoModel)XmlSerial.Deserialize(read);
-                userAdress = us.Adress;
-                userPassword = us.Password;
-                DecryptingPassword(userPassword);
-            
-            using (Imap imap = new Imap())
-            {
-                    try { 
-                    imap.ConnectSSL("imap.gmail.com");
-                    imap.UseBestLogin(userAdress, userPassword);
-                    imap.SelectInbox();
-                    List<long> uids = imap.Search(Flag.Unseen);
-                    int newmessages = uids.Count;
-                    label1.Text = newmessages.ToString();
-                    imap.Close();
-                    }
-                    catch(Exception )
-                    {
-                        MessageBox.Show("Wystąpiły problemy podczas logowania do skrzynki g-mail. Upewnij się, że jesteś połączony z siecią internetową.");
-                    }
-                }
-            }
-            else
-            {
-                MessageBox.Show("Musisz skonfigurować swoje dane dotyczące adresu e-mail oraz lokalizację");
-            }
-
+            GetDataFromWebsite Data = new GetDataFromWebsite();
+            label1.Text = Data.EmailsCount();
+            LabelTemp.Text = Data.Temperature();
         }
-        //Decrypt the password from xml file to the real password string
-        private void DecryptingPassword(string password)
-        {
-            TripleDESCryptoServiceProvider tr = new TripleDESCryptoServiceProvider();
-            ICryptoTransform toArray = tr.CreateEncryptor();
-            MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
-            UTF8Encoding utf = new UTF8Encoding();
-            tr.Key = md5.ComputeHash(utf.GetBytes("**********"));//the key is my sweet secret :P
-            tr.Mode = CipherMode.ECB;
-            tr.Padding = PaddingMode.PKCS7;
-            ICryptoTransform trans = tr.CreateDecryptor();
-            byte[] data = password.Split('-').Select(b => Convert.ToByte(b, 16)).ToArray();
-            userPassword = utf.GetString(trans.TransformFinalBlock(data, 0, data.Length));
-        }
-        //Getting info from website about weather in our location
-        private async void WeatherforMyLocation()
-        {
-            try
-            {
-                XDocument xml = System.Xml.Linq.XDocument.Load("UserSettingInfo.xml");
-                string cityname = xml.Descendants("Miejscowosc").FirstOrDefault().FirstNode.ToString();
-                if(cityname.Contains(" ") == true)// checing if our location is one part string name city or two part string name
-                    cityname=cityname.Replace(" ","-") ;                
-                string urllink = "http://www.pogodynka.pl/polska/"+cityname+"_"+cityname; //crating special url link to get to the website for our location
-                var httpClient = new HttpClient();
-                var frompage = await httpClient.GetStringAsync(urllink);
-
-                var htmlDoc = new HtmlAgilityPack.HtmlDocument();
-                htmlDoc.LoadHtml(frompage);
-                var data = htmlDoc.DocumentNode.Descendants("div").
-                            Where(n => n.GetAttributeValue("class", "").Equals("autodin")).ToList();
-                string temperature = data[0].Descendants("b").Where(m => m.InnerText.Contains("&#176;C")).FirstOrDefault().InnerText;
-                LabelTemp.Text = temperature.Replace("&#176;C", "°C");
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Niestety nie udało się pobrać danych pogodowych");
-            }
-           
-        }
-
         private void exitpanel_Click(object sender, EventArgs e)
         {
             panel4.Visible = false;
@@ -152,7 +68,6 @@ namespace WindowsFormsApplication1
             {
                 f3.Visible = false;
                 showform3 = false;
-
             }
         }
         //Button to form with Tasks To Do
@@ -170,8 +85,7 @@ namespace WindowsFormsApplication1
         //Refresh button 
         private void button2_Click_1(object sender, EventArgs e)
         {
-            GetNewEmails();
-            WeatherforMyLocation();
+            UpDataPanel();
         }
     }
 }

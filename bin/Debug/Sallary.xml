@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<wyplata>
+  <kasa za="1 stycznia 2018">
+    <wysokosc>1000</wysokosc>
+  </kasa>
+  <kasa za="1 lutego 2018">
+    <wysokosc>2000</wysokosc>
+  </kasa>
+  <kasa za="1 marca 2018">
+    <wysokosc>3000</wysokosc>
+  </kasa>
+  <kasa za="6 czerwca 2018">
+    <wysokosc>1200</wysokosc>
+  </kasa>
+</wyplata>
