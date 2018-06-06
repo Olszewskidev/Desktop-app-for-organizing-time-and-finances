@@ -74,7 +74,7 @@ namespace WindowsFormsApplication1
             ICryptoTransform toArray = tr.CreateEncryptor();
             MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
             UTF8Encoding utf = new UTF8Encoding();
-            tr.Key = md5.ComputeHash(utf.GetBytes("KamilOlszewski123"));//the key is my sweet secret :P
+            tr.Key = md5.ComputeHash(utf.GetBytes("******************"));//the key is my sweet secret :P
             tr.Mode = CipherMode.ECB;
             tr.Padding = PaddingMode.PKCS7;
             ICryptoTransform trans = tr.CreateDecryptor();
